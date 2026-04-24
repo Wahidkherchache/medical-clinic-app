@@ -1,11 +1,11 @@
--- 1. تنظيف البيئة (حذف القديم لتجنب ORA-00955)
+
 DROP TABLE Appointment CASCADE CONSTRAINTS;
 DROP TABLE Patient CASCADE CONSTRAINTS;
 DROP TABLE Doctor CASCADE CONSTRAINTS;
 DROP SEQUENCE Seq_Patient;
 DROP SEQUENCE Seq_Doctor;
 DROP SEQUENCE Seq_Appointment;
--- 2. إنشاء الجداول
+
 CREATE TABLE Patient (
     Num_patient NUMBER PRIMARY KEY,
     LastName VARCHAR2(25) NOT NULL,
@@ -31,12 +31,11 @@ CREATE TABLE Appointment (
     CONSTRAINT FK_Patient FOREIGN KEY (Num_Patient) REFERENCES Patient(Num_patient) ON DELETE CASCADE,
     CONSTRAINT FK_Doctor FOREIGN KEY (Num_Doctor) REFERENCES Doctor(Num_doctor) ON DELETE CASCADE
 );
--- 3. إنشاء الـ Sequences
+
 CREATE SEQUENCE Seq_Patient START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE Seq_Doctor START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE Seq_Appointment START WITH 1 INCREMENT BY 1;
--- 4. إنشاء الـ Triggers (الربط التلقائي)
--- ملاحظة: علامة "/" ضرورية جداً في سطر منفصل لتنفيذ الـ Trigger
+
 CREATE OR REPLACE TRIGGER trg_patient_id BEFORE
 INSERT ON Patient FOR EACH ROW BEGIN
 SELECT Seq_Patient.NEXTVAL INTO :new.Num_patient
