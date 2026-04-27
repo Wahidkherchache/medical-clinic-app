@@ -140,7 +140,6 @@ JavaDb/
 | Name | Role |
 |------|------|
 | Abdelouahid Kherchache | Development |
-| [Teammate Name] | Development |
 
 ---
 
