@@ -4,6 +4,8 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import net.proteanit.sql.DbUtils;
 
 public class PatientWindow extends JFrame {
@@ -29,14 +31,13 @@ public class PatientWindow extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setColor(new Color(248, 250, 252));
-                g2.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(new Color(248, 250, 252));
+                g.fillRect(0, 0, getWidth(), getHeight());
             }
         };
         setContentPane(mainPanel);
 
-        // ── Header ──────────────────────────────────────────────────────────
+        // Header
         JPanel header = new JPanel(null) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -57,22 +58,8 @@ public class PatientWindow extends JFrame {
         titleLbl.setBounds(20, 15, 400, 40);
         header.add(titleLbl);
 
-        // ── Left form panel ─────────────────────────────────────────────────
-        JPanel formPanel = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
-                g2.setColor(new Color(226, 232, 240));
-                g2.setStroke(new BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
-            }
-        };
-        formPanel.setOpaque(false);
-        formPanel.setBounds(15, 85, 260, 490);
+        // Left form panel
+        JPanel formPanel = createCard(15, 85, 260, 490);
         mainPanel.add(formPanel);
 
         JLabel formTitle = new JLabel("Patient Details");
@@ -86,14 +73,12 @@ public class PatientWindow extends JFrame {
         sep.setBounds(15, 45, 230, 2);
         formPanel.add(sep);
 
-        // Form fields
-        txtLastName  = addField(formPanel, "Last Name",    55,  txtLastName);
-        txtFirstName = addField(formPanel, "First Name",   115, txtFirstName);
-        txtDOB       = addField(formPanel, "Date of Birth (DD/MM/YYYY)", 175, txtDOB);
-        txtPhone     = addField(formPanel, "Phone",        235, txtPhone);
-        txtAddress   = addField(formPanel, "Address",      295, txtAddress);
+        txtLastName  = addField(formPanel, "Last Name",    55);
+        txtFirstName = addField(formPanel, "First Name",   115);
+        txtDOB       = addField(formPanel, "Date of Birth (DD/MM/YYYY)", 175);
+        txtPhone     = addField(formPanel, "Phone",        235);
+        txtAddress   = addField(formPanel, "Address",      295);
 
-        // Action buttons
         JButton btnAdd    = createButton("Add",    new Color(220, 38, 38));
         JButton btnUpdate = createButton("Update", new Color(37, 99, 235));
         JButton btnDelete = createButton("Delete", new Color(107, 114, 128));
@@ -109,32 +94,16 @@ public class PatientWindow extends JFrame {
         formPanel.add(btnDelete);
         formPanel.add(btnClear);
 
-        // Status
         statusLabel = new JLabel("Ready");
         statusLabel.setFont(new Font("Tahoma", Font.PLAIN, 11));
         statusLabel.setForeground(new Color(100, 116, 139));
         statusLabel.setBounds(15, 460, 230, 20);
         formPanel.add(statusLabel);
 
-        // ── Right table panel ────────────────────────────────────────────────
-        JPanel tablePanel = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
-                g2.setColor(new Color(226, 232, 240));
-                g2.setStroke(new BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
-            }
-        };
-        tablePanel.setOpaque(false);
-        tablePanel.setBounds(290, 85, 595, 490);
+        // Right table panel
+        JPanel tablePanel = createCard(290, 85, 595, 490);
         mainPanel.add(tablePanel);
 
-        // Search bar
         JLabel searchIcon = new JLabel("🔍");
         searchIcon.setBounds(15, 15, 25, 30);
         tablePanel.add(searchIcon);
@@ -147,15 +116,13 @@ public class PatientWindow extends JFrame {
         txtSearch.setBounds(45, 15, 330, 32);
         tablePanel.add(txtSearch);
 
-        JButton btnSearch = createButton("Search", new Color(220, 38, 38));
+        JButton btnSearch  = createButton("Search", new Color(220, 38, 38));
+        JButton btnRefresh = createButton("All",    new Color(15, 23, 42));
         btnSearch.setBounds(385, 15, 90, 32);
-        tablePanel.add(btnSearch);
-
-        JButton btnRefresh = createButton("All", new Color(15, 23, 42));
         btnRefresh.setBounds(480, 15, 90, 32);
+        tablePanel.add(btnSearch);
         tablePanel.add(btnRefresh);
 
-        // Table
         table = new JTable();
         table.setFont(new Font("Tahoma", Font.PLAIN, 12));
         table.setRowHeight(28);
@@ -167,16 +134,13 @@ public class PatientWindow extends JFrame {
         table.getTableHeader().setPreferredSize(new Dimension(0, 35));
         table.setSelectionBackground(new Color(254, 226, 226));
         table.setSelectionForeground(new Color(15, 23, 42));
-
-        // Alternating row colors
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
                     boolean isSelected, boolean hasFocus, int row, int col) {
                 Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
-                if (!isSelected) {
+                if (!isSelected)
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
-                }
                 ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
                 return c;
             }
@@ -187,7 +151,7 @@ public class PatientWindow extends JFrame {
         scrollPane.setBounds(15, 60, 565, 415);
         tablePanel.add(scrollPane);
 
-        // ── Button Actions ──────────────────────────────────────────────────
+        // Actions
         btnAdd.addActionListener(e -> addPatient());
         btnUpdate.addActionListener(e -> updatePatient());
         btnDelete.addActionListener(e -> deletePatient());
@@ -195,32 +159,99 @@ public class PatientWindow extends JFrame {
         btnSearch.addActionListener(e -> searchPatient());
         btnRefresh.addActionListener(e -> loadPatients());
 
-        // Row click → fill form
+        // Row click fills form — date is formatted to DD/MM/YYYY
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
-                    txtLastName.setText(table.getValueAt(row, 1) != null ? table.getValueAt(row, 1).toString() : "");
-                    txtFirstName.setText(table.getValueAt(row, 2) != null ? table.getValueAt(row, 2).toString() : "");
-                    txtDOB.setText(table.getValueAt(row, 3) != null ? table.getValueAt(row, 3).toString() : "");
-                    txtPhone.setText(table.getValueAt(row, 4) != null ? table.getValueAt(row, 4).toString() : "");
-                    txtAddress.setText(table.getValueAt(row, 5) != null ? table.getValueAt(row, 5).toString() : "");
+                    txtLastName.setText(safeGet(row, 1));
+                    txtFirstName.setText(safeGet(row, 2));
+                    txtDOB.setText(formatDateSafe(safeGet(row, 3)));
+                    txtPhone.setText(safeGet(row, 4));
+                    txtAddress.setText(safeGet(row, 5));
                     setStatus("Row selected — edit and press Update", new Color(37, 99, 235));
                 }
             }
         });
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
+    // ── Date Utilities ────────────────────────────────────────────────────────
 
-    private JTextField addField(JPanel panel, String label, int y, JTextField field) {
+    /**
+     * Converts any date string to DD/MM/YYYY for display in the text field.
+     */
+    private String formatDateSafe(String raw) {
+        if (raw == null || raw.isEmpty()) return "";
+        SimpleDateFormat[] inputs = {
+            new SimpleDateFormat("yyyy-MM-dd"),
+            new SimpleDateFormat("dd-MMM-yy", Locale.ENGLISH),
+            new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH),
+            new SimpleDateFormat("dd/MM/yyyy")
+        };
+        SimpleDateFormat output = new SimpleDateFormat("dd/MM/yyyy");
+        for (SimpleDateFormat sdf : inputs) {
+            try {
+                sdf.setLenient(false);
+                return output.format(sdf.parse(raw));
+            } catch (Exception ignored) {}
+        }
+        return raw; // return as-is if nothing works
+    }
+
+    /**
+     * Parses a date string (DD/MM/YYYY or Oracle formats) to java.sql.Date.
+     */
+    private java.sql.Date parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) return null;
+        SimpleDateFormat[] formats = {
+            new SimpleDateFormat("dd/MM/yyyy"),
+            new SimpleDateFormat("dd-MMM-yy", Locale.ENGLISH),
+            new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH),
+            new SimpleDateFormat("yyyy-MM-dd")
+        };
+        for (SimpleDateFormat sdf : formats) {
+            try {
+                sdf.setLenient(false);
+                java.util.Date d = sdf.parse(dateStr);
+                return new java.sql.Date(d.getTime());
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private String safeGet(int row, int col) {
+        Object val = table.getValueAt(row, col);
+        return val != null ? val.toString() : "";
+    }
+
+    private JPanel createCard(int x, int y, int w, int h) {
+        JPanel p = new JPanel(null) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(new Color(226, 232, 240));
+                g2.setStroke(new BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
+            }
+        };
+        p.setOpaque(false);
+        p.setBounds(x, y, w, h);
+        return p;
+    }
+
+    private JTextField addField(JPanel panel, String label, int y) {
         JLabel lbl = new JLabel(label);
         lbl.setFont(new Font("Tahoma", Font.PLAIN, 11));
         lbl.setForeground(new Color(71, 85, 105));
         lbl.setBounds(15, y, 230, 16);
         panel.add(lbl);
-
         JTextField tf = new JTextField();
         tf.setFont(new Font("Tahoma", Font.PLAIN, 12));
         tf.setBorder(BorderFactory.createCompoundBorder(
@@ -244,8 +275,7 @@ public class PatientWindow extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color bg = hovered ? color.darker() : color;
-                g2.setColor(bg);
+                g2.setColor(hovered ? color.darker() : color);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
                 super.paintComponent(g);
             }
@@ -264,7 +294,7 @@ public class PatientWindow extends JFrame {
         statusLabel.setForeground(color);
     }
 
-    // ── Database Operations ─────────────────────────────────────────────────
+    // ── Database Operations ───────────────────────────────────────────────────
 
     private void loadPatients() {
         try {
@@ -279,24 +309,27 @@ public class PatientWindow extends JFrame {
     }
 
     private void addPatient() {
-        String ln = txtLastName.getText().trim();
-        String fn = txtFirstName.getText().trim();
-        String dob = txtDOB.getText().trim();
-        String ph = txtPhone.getText().trim();
+        String ln   = txtLastName.getText().trim();
+        String fn   = txtFirstName.getText().trim();
+        String dob  = txtDOB.getText().trim();
+        String ph   = txtPhone.getText().trim();
         String addr = txtAddress.getText().trim();
 
         if (ln.isEmpty() || fn.isEmpty()) {
             setStatus("Last Name and First Name are required!", new Color(220, 38, 38));
             return;
         }
-
-        String sql = "INSERT INTO Patient (LastName, FirstName, Date_of_Birth, Phone, Address) " +
-                     "VALUES (?, ?, TO_DATE(?, 'DD/MM/YYYY'), ?, ?)";
+        java.sql.Date sqlDate = parseDate(dob);
+        if (sqlDate == null) {
+            setStatus("Invalid date! Use DD/MM/YYYY", new Color(220, 38, 38));
+            return;
+        }
+        String sql = "INSERT INTO Patient (LastName, FirstName, Date_of_Birth, Phone, Address) VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, ln);
             ps.setString(2, fn);
-            ps.setString(3, dob);
+            ps.setDate(3, sqlDate);
             ps.setString(4, ph);
             ps.setString(5, addr);
             ps.executeUpdate();
@@ -317,13 +350,17 @@ public class PatientWindow extends JFrame {
         }
         int id = Integer.parseInt(table.getValueAt(row, 0).toString());
 
-        String sql = "UPDATE Patient SET LastName=?, FirstName=?, Date_of_Birth=TO_DATE(?, 'DD/MM/YYYY'), Phone=?, Address=? " +
-                     "WHERE Num_patient=?";
+        java.sql.Date sqlDate = parseDate(txtDOB.getText().trim());
+        if (sqlDate == null) {
+            setStatus("Invalid date! Use DD/MM/YYYY", new Color(220, 38, 38));
+            return;
+        }
+        String sql = "UPDATE Patient SET LastName=?, FirstName=?, Date_of_Birth=?, Phone=?, Address=? WHERE Num_patient=?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, txtLastName.getText().trim());
             ps.setString(2, txtFirstName.getText().trim());
-            ps.setString(3, txtDOB.getText().trim());
+            ps.setDate(3, sqlDate);
             ps.setString(4, txtPhone.getText().trim());
             ps.setString(5, txtAddress.getText().trim());
             ps.setInt(6, id);
@@ -343,7 +380,7 @@ public class PatientWindow extends JFrame {
             setStatus("Please select a patient to delete", new Color(245, 158, 11));
             return;
         }
-        String name = table.getValueAt(row, 1) + " " + table.getValueAt(row, 2);
+        String name = safeGet(row, 1) + " " + safeGet(row, 2);
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to delete patient: " + name + "?",
                 "Confirm Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -366,7 +403,6 @@ public class PatientWindow extends JFrame {
     private void searchPatient() {
         String keyword = txtSearch.getText().trim();
         if (keyword.isEmpty()) { loadPatients(); return; }
-
         String sql = "SELECT * FROM Patient WHERE UPPER(LastName) LIKE ? OR UPPER(FirstName) LIKE ? OR Phone LIKE ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
